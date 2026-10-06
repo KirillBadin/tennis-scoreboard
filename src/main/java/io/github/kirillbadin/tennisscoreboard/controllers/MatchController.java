@@ -1,7 +1,6 @@
 package io.github.kirillbadin.tennisscoreboard.controllers;
 
 import io.github.kirillbadin.tennisscoreboard.dto.MatchesPageDto;
-import io.github.kirillbadin.tennisscoreboard.entity.Match;
 import io.github.kirillbadin.tennisscoreboard.services.MatchService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -11,8 +10,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/matches")
