@@ -1,8 +1,6 @@
 package io.github.kirillbadin.tennisscoreboard.controllers;
 
-import io.github.kirillbadin.tennisscoreboard.dto.CreateMatchRequestDto;
-import io.github.kirillbadin.tennisscoreboard.dto.CreateMatchResponseDto;
-import io.github.kirillbadin.tennisscoreboard.dto.MatchesPageDto;
+import io.github.kirillbadin.tennisscoreboard.dto.*;
 import io.github.kirillbadin.tennisscoreboard.services.LiveMatchService;
 import io.github.kirillbadin.tennisscoreboard.services.MatchService;
 import jakarta.validation.Valid;
@@ -13,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 
 @RestController
@@ -39,5 +39,17 @@ public class MatchController {
     @PostMapping
     public ResponseEntity<CreateMatchResponseDto> createMatch(@Valid @RequestBody CreateMatchRequestDto dto){
         return ResponseEntity.status(HttpStatus.CREATED).body(liveMatchService.createNewMatch(dto));
+    }
+
+    @PostMapping("/{uuid}/point")
+    public ResponseEntity<MatchStateDto> addPoint(@PathVariable UUID uuid,@Valid @RequestBody PointRequestDto pointRequestDto){
+        MatchStateDto matchStateDto = liveMatchService.addPoint(uuid, pointRequestDto);
+        return ResponseEntity.ok(matchStateDto);
+    }
+
+    @GetMapping("/{uuid}")
+    public ResponseEntity<MatchStateDto> getScore(@PathVariable UUID uuid){
+        MatchStateDto matchStateDto = liveMatchService.getScore(uuid);
+        return ResponseEntity.ok(matchStateDto);
     }
 }

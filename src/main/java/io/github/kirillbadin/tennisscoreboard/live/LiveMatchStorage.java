@@ -14,4 +14,8 @@ public class LiveMatchStorage {
         storage.put(liveMatch.getUuid(), liveMatch);
         System.out.println("Сохранили матч" + liveMatch.getUuid());
     }
+
+    public LiveMatch getMatch(UUID uuid){
+        return storage.get(uuid);
+    }
 }
