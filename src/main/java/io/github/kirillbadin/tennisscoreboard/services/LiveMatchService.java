@@ -69,11 +69,13 @@ public class LiveMatchService {
     }
 
     private PlayerStateDto toPlayerState(LiveMatch match, PlayerSide side) {
-        int playerPoints = match.getPoints(side);
-        int opponentPoints = match.getPoints(side.opposite());
+        Integer tieBreakPoints = match.getTieBreakPoints(side);
+        String points = (tieBreakPoints == null)
+                ? toDisplayPoints(match.getPoints(side), match.getPoints(side.opposite()))
+                : null;
         return new PlayerStateDto(
                 match.getPlayerName(side),
-                toDisplayPoints(playerPoints, opponentPoints),
+                points,
                 match.getGames(side),
                 match.getSets(side),
                 match.getTieBreakPoints(side)
