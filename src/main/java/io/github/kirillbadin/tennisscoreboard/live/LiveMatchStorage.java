@@ -12,10 +12,13 @@ public class LiveMatchStorage {
 
     public void save(LiveMatch liveMatch) {
         storage.put(liveMatch.getUuid(), liveMatch);
-        System.out.println("Сохранили матч" + liveMatch.getUuid());
     }
 
     public LiveMatch getMatch(UUID uuid){
         return storage.get(uuid);
+    }
+
+    public void remove(UUID uuid) {
+        storage.remove(uuid);
     }
 }

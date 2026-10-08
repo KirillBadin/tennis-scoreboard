@@ -1,10 +1,13 @@
 package io.github.kirillbadin.tennisscoreboard.services;
 
 import io.github.kirillbadin.tennisscoreboard.dto.*;
+import io.github.kirillbadin.tennisscoreboard.entity.Match;
+import io.github.kirillbadin.tennisscoreboard.entity.Player;
 import io.github.kirillbadin.tennisscoreboard.live.LiveMatch;
 import io.github.kirillbadin.tennisscoreboard.live.LiveMatchStorage;
 import io.github.kirillbadin.tennisscoreboard.live.PlayerSide;
 import io.github.kirillbadin.tennisscoreboard.repositories.MatchRepository;
+import io.github.kirillbadin.tennisscoreboard.repositories.PlayerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +18,7 @@ import java.util.UUID;
 public class LiveMatchService {
 
     private final MatchRepository matchRepository;
+    private final PlayerRepository playerRepository;
     private final LiveMatchStorage liveMatchStorage;
 
     public CreateMatchResponseDto createNewMatch(CreateMatchRequestDto dto) {
@@ -23,24 +27,46 @@ public class LiveMatchService {
         return new CreateMatchResponseDto(liveMatch.getUuid());
     }
 
-    public MatchStateDto addPoint(UUID uuid, PointRequestDto pointRequestDto) {
-        LiveMatch liveMatch = liveMatchStorage.getMatch(uuid); //TODO Проверка на uuid, чтоб совпал
-        // TODO Проверка на имя игрока, чтоб он был в матче. и в liveMatch
-        liveMatch.addPoint(pointRequestDto.name());
-        return toMatchStateDto(liveMatch);
-    }
-
     public MatchStateDto getScore(UUID uuid) {
         LiveMatch liveMatch = liveMatchStorage.getMatch(uuid);
         return toMatchStateDto(liveMatch);
     }
+
+
+    public MatchStateDto addPoint(UUID uuid, PointRequestDto pointRequestDto) {
+        LiveMatch liveMatch = liveMatchStorage.getMatch(uuid); //TODO Проверка на uuid, чтоб совпал
+        // TODO Проверка на имя игрока, чтоб он был в матче. и в liveMatch
+        liveMatch.addPoint(pointRequestDto.name());
+        handleMatchCompletion(liveMatch);
+        return toMatchStateDto(liveMatch);
+    }
+
+    private void handleMatchCompletion(LiveMatch liveMatch) {
+        liveMatch.getWinnerName().ifPresent(winnerName -> {
+           saveMatchToDB(liveMatch);
+           liveMatchStorage.remove(liveMatch.getUuid());
+        });
+    }
+
+    private void saveMatchToDB(LiveMatch liveMatch) {
+        Player firstPlayer = getOrCreatePlayer(liveMatch.getPlayerName(PlayerSide.FIRST));
+        Player secondPlayer = getOrCreatePlayer(liveMatch.getPlayerName(PlayerSide.SECOND));
+        String winnerName = liveMatch.getWinnerName().orElseThrow();
+        Player winner = winnerName.equals(firstPlayer.getName()) ? firstPlayer : secondPlayer;
+        matchRepository.save(new Match(firstPlayer, secondPlayer, winner));
+    }
+
+    private Player getOrCreatePlayer(String playerName) {
+        return playerRepository.findByName(playerName)
+                .orElseGet(() -> playerRepository.save(new Player(playerName)));
+    }
+
     private MatchStateDto toMatchStateDto(LiveMatch liveMatch) {
         PlayerStateDto firstPlayer = toPlayerState(liveMatch, PlayerSide.FIRST);
         PlayerStateDto secondPlayer = toPlayerState(liveMatch, PlayerSide.SECOND);
         String winnerName = liveMatch.getWinnerName().orElse(null);
         return new MatchStateDto(firstPlayer, secondPlayer, winnerName);
     }
-
 
     private PlayerStateDto toPlayerState(LiveMatch match, PlayerSide side) {
         int playerPoints = match.getPoints(side);
