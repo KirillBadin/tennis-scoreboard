@@ -4,12 +4,10 @@ import io.github.kirillbadin.tennisscoreboard.dto.*;
 import io.github.kirillbadin.tennisscoreboard.services.LiveMatchService;
 import io.github.kirillbadin.tennisscoreboard.services.MatchService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -17,7 +15,6 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/matches")
-@Validated
 public class MatchController {
 
     private final MatchService matchService;
@@ -30,7 +27,7 @@ public class MatchController {
 
     @GetMapping
     public ResponseEntity<MatchesPageDto> getMatches(
-            @PageableDefault(size = 10) Pageable pageable,
+            @PageableDefault(size = 1) Pageable pageable,
             @RequestParam(name = "player_name", required = false) String playerName){
 
         MatchesPageDto matchesPageDto = matchService.getMatchesPage(pageable, playerName);
@@ -42,7 +39,7 @@ public class MatchController {
     }
 
     @PostMapping("/{uuid}/point")
-    public ResponseEntity<MatchStateDto> addPoint(@PathVariable UUID uuid,@Valid @RequestBody PointRequestDto pointRequestDto){
+    public ResponseEntity<MatchStateDto> addPoint(@PathVariable UUID uuid, @Valid @RequestBody PointRequestDto pointRequestDto){
         MatchStateDto matchStateDto = liveMatchService.addPoint(uuid, pointRequestDto);
         return ResponseEntity.ok(matchStateDto);
     }

@@ -3,6 +3,7 @@ package io.github.kirillbadin.tennisscoreboard.live;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -14,8 +15,8 @@ public class LiveMatchStorage {
         storage.put(liveMatch.getUuid(), liveMatch);
     }
 
-    public LiveMatch getMatch(UUID uuid){
-        return storage.get(uuid);
+    public Optional<LiveMatch> getMatch(UUID uuid){
+        return Optional.ofNullable(storage.get(uuid));
     }
 
     public void remove(UUID uuid) {

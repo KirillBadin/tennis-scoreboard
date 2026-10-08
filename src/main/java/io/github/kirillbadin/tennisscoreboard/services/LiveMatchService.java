@@ -3,6 +3,8 @@ package io.github.kirillbadin.tennisscoreboard.services;
 import io.github.kirillbadin.tennisscoreboard.dto.*;
 import io.github.kirillbadin.tennisscoreboard.entity.Match;
 import io.github.kirillbadin.tennisscoreboard.entity.Player;
+import io.github.kirillbadin.tennisscoreboard.exceptions.MatchNotFoundException;
+import io.github.kirillbadin.tennisscoreboard.exceptions.PlayerNamesConflictException;
 import io.github.kirillbadin.tennisscoreboard.live.LiveMatch;
 import io.github.kirillbadin.tennisscoreboard.live.LiveMatchStorage;
 import io.github.kirillbadin.tennisscoreboard.live.PlayerSide;
@@ -22,23 +24,30 @@ public class LiveMatchService {
     private final LiveMatchStorage liveMatchStorage;
 
     public CreateMatchResponseDto createNewMatch(CreateMatchRequestDto dto) {
+        if(dto.firstPlayerName().equals(dto.secondPlayerName())){
+            throw new PlayerNamesConflictException("Имена игроков не могут совпадать");
+        }
         LiveMatch liveMatch = new LiveMatch(dto.firstPlayerName(), dto.secondPlayerName());
         liveMatchStorage.save(liveMatch);
         return new CreateMatchResponseDto(liveMatch.getUuid());
     }
 
     public MatchStateDto getScore(UUID uuid) {
-        LiveMatch liveMatch = liveMatchStorage.getMatch(uuid);
-        return toMatchStateDto(liveMatch);
+        return toMatchStateDto(getMatch(uuid));
     }
 
 
     public MatchStateDto addPoint(UUID uuid, PointRequestDto pointRequestDto) {
-        LiveMatch liveMatch = liveMatchStorage.getMatch(uuid); //TODO Проверка на uuid, чтоб совпал
+        LiveMatch liveMatch = getMatch(uuid);
         // TODO Проверка на имя игрока, чтоб он был в матче. и в liveMatch
         liveMatch.addPoint(pointRequestDto.name());
         handleMatchCompletion(liveMatch);
         return toMatchStateDto(liveMatch);
+    }
+
+    public LiveMatch getMatch(UUID uuid){
+        return liveMatchStorage.getMatch(uuid)
+                .orElseThrow(() -> new MatchNotFoundException("матч с таким uuid не найден"));
     }
 
     private void handleMatchCompletion(LiveMatch liveMatch) {
