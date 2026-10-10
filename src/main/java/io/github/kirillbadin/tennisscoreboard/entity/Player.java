@@ -2,15 +2,12 @@ package io.github.kirillbadin.tennisscoreboard.entity;
 
 
 import jakarta.persistence.*;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
+@Table(name ="players", indexes = @Index(name = "idx_player_name", columnList = "name", unique = true))
 @Getter
-@NoArgsConstructor
-@EqualsAndHashCode
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Player {
 
     @Id
@@ -18,8 +15,7 @@ public class Player {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Setter
-    @Column(name = "name", nullable = false)
+    @Column(name = "name", nullable = false, updatable = false, length = 50)
     private String name;
 
     public Player(String name) {
