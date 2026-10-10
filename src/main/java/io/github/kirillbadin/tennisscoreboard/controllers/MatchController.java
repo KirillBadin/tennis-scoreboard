@@ -4,6 +4,7 @@ import io.github.kirillbadin.tennisscoreboard.dto.*;
 import io.github.kirillbadin.tennisscoreboard.services.LiveMatchService;
 import io.github.kirillbadin.tennisscoreboard.services.MatchService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -14,6 +15,7 @@ import java.util.UUID;
 
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/matches")
 public class MatchController {
 
@@ -21,10 +23,6 @@ public class MatchController {
     private final MatchService matchService;
     private final LiveMatchService liveMatchService;
 
-    public MatchController(MatchService matchService, LiveMatchService liveMatchService) {
-        this.matchService = matchService;
-        this.liveMatchService = liveMatchService;
-    }
 
     @GetMapping
     public ResponseEntity<MatchesPageDto> getMatches(
