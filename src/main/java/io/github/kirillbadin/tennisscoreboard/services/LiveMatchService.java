@@ -9,6 +9,7 @@ import io.github.kirillbadin.tennisscoreboard.live.PlayerSide;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -17,13 +18,20 @@ public class LiveMatchService {
 
     private final LiveMatchStorage liveMatchStorage;
     private final MatchService matchService;
+    private final PlayerService playerService;
 
     public CreateMatchResponseDto createNewMatch(CreateMatchRequestDto dto) {
-        if(dto.firstPlayerName().equals(dto.secondPlayerName())){
+        String firstPlayerName = dto.firstPlayerName().trim();
+        String secondPlayerName = dto.secondPlayerName().trim();
+
+        if (Objects.equals(firstPlayerName, secondPlayerName)) {
             throw new PlayerNamesConflictException("Имена игроков не могут совпадать");
         }
 
-        LiveMatch liveMatch = new LiveMatch(dto.firstPlayerName(), dto.secondPlayerName());
+        playerService.getOrCreatePlayer(firstPlayerName);
+        playerService.getOrCreatePlayer(secondPlayerName);
+
+        LiveMatch liveMatch = new LiveMatch(firstPlayerName, secondPlayerName);
         liveMatchStorage.save(liveMatch);
         return new CreateMatchResponseDto(liveMatch.getUuid());
     }
@@ -35,9 +43,10 @@ public class LiveMatchService {
 
     public MatchStateDto addPoint(UUID uuid, PointRequestDto pointRequestDto) {
         LiveMatch liveMatch = getMatch(uuid);
-        // TODO Проверка на имя игрока, чтоб он был в матче. и в liveMatch
-        liveMatch.addPoint(pointRequestDto.name());
-        handleMatchCompletion(liveMatch);
+        synchronized (liveMatch) {
+            liveMatch.addPoint(pointRequestDto.name());
+            handleMatchCompletion(liveMatch);
+        }
         return toMatchStateDto(liveMatch);
     }
 
