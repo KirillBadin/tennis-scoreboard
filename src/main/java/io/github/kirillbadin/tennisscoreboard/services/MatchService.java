@@ -3,24 +3,24 @@ package io.github.kirillbadin.tennisscoreboard.services;
 import io.github.kirillbadin.tennisscoreboard.dto.MatchDto;
 import io.github.kirillbadin.tennisscoreboard.dto.MatchesPageDto;
 import io.github.kirillbadin.tennisscoreboard.entity.Match;
+import io.github.kirillbadin.tennisscoreboard.entity.Player;
+import io.github.kirillbadin.tennisscoreboard.live.LiveMatch;
+import io.github.kirillbadin.tennisscoreboard.live.PlayerSide;
 import io.github.kirillbadin.tennisscoreboard.repositories.MatchRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional(readOnly = true)
+@RequiredArgsConstructor
 public class MatchService {
 
     private final MatchRepository matchRepository;
+    private final PlayerService playerService;
 
-    @Autowired
-    public MatchService(MatchRepository matchRepository) {
-        this.matchRepository = matchRepository;
-    }
-
+    @Transactional(readOnly = true)
     public MatchesPageDto getMatchesPage(Pageable pageable, String playerName) {
         Page<Match> allMatches = (playerName == null || playerName.isBlank())
                 ? matchRepository.findAll(pageable)
@@ -35,5 +35,13 @@ public class MatchService {
                 dtoPage.getContent(),
                 dtoPage.getNumber()+1,  // Spring 0-based → фронт 1-based
                 dtoPage.getTotalPages());
+    }
+    @Transactional
+    public void save(LiveMatch liveMatch) {
+        Player firstPlayer = playerService.getOrCreatePlayer(liveMatch.getPlayerName(PlayerSide.FIRST));
+        Player secondPlayer = playerService.getOrCreatePlayer(liveMatch.getPlayerName(PlayerSide.SECOND));
+        String winnerName = liveMatch.getWinnerName().orElseThrow();
+        Player winner = winnerName.equals(firstPlayer.getName()) ? firstPlayer : secondPlayer;
+        matchRepository.save(new Match(firstPlayer, secondPlayer, winner));
     }
 }
