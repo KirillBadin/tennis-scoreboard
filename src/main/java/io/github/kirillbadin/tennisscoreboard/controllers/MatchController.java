@@ -17,6 +17,7 @@ import java.util.UUID;
 @RequestMapping("/matches")
 public class MatchController {
 
+    private static final int DEFAULT_PAGE_SIZE = 2;
     private final MatchService matchService;
     private final LiveMatchService liveMatchService;
 
@@ -27,7 +28,7 @@ public class MatchController {
 
     @GetMapping
     public ResponseEntity<MatchesPageDto> getMatches(
-            @PageableDefault(size = 1) Pageable pageable,
+            @PageableDefault(size = DEFAULT_PAGE_SIZE, sort = "id") Pageable pageable,
             @RequestParam(name = "player_name", required = false) String playerName){
 
         MatchesPageDto matchesPageDto = matchService.getMatchesPage(pageable, playerName);
