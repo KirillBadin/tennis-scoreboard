@@ -1,5 +1,6 @@
 package io.github.kirillbadin.tennisscoreboard.live;
 
+import io.github.kirillbadin.tennisscoreboard.exceptions.PlayerNotInMatchException;
 import lombok.Getter;
 
 import java.util.Optional;
@@ -10,38 +11,29 @@ public class LiveMatch {
     private final UUID uuid;
     private final String firstPlayerName;
     private final String secondPlayerName;
-    private LiveSet liveSet;
-    private int firstSet;
-    private int secondSet;
+    private final MatchScore matchScore;
 
     public LiveMatch(String firstPlayerName, String secondPlayerName) {
         this.firstPlayerName = firstPlayerName;
         this.secondPlayerName = secondPlayerName;
-        uuid = UUID.randomUUID();
-        liveSet = new LiveSet();
+        this.uuid = UUID.randomUUID();
+        this.matchScore = new MatchScore();
     }
 
     public void addPoint(String name) {
-        PlayerSide side = firstPlayerName.equals(name) ? PlayerSide.FIRST : PlayerSide.SECOND;
-        liveSet.addPoint(side);
-        liveSet.getWinner().ifPresent(this::handleSetWinner);
-    }
-
-    private void handleSetWinner(PlayerSide winnerSide) {
-        if (winnerSide == PlayerSide.FIRST) {
-            firstSet++;
-        } else secondSet++;
-        liveSet = new LiveSet();
+        if (firstPlayerName.equals(name)) {
+            matchScore.addPoint(PlayerSide.FIRST);
+            return;
+        }
+        if (secondPlayerName.equals(name)) {
+            matchScore.addPoint(PlayerSide.SECOND);
+            return;
+        }
+        throw new PlayerNotInMatchException("Игрок '" + name + "' не найден в матче");
     }
 
     public Optional<String> getWinnerName() {
-        if (firstSet == 2) {
-            return Optional.of(firstPlayerName);
-        }
-        if (secondSet == 2) {
-            return Optional.of(secondPlayerName);
-        }
-        return Optional.empty();
+        return matchScore.getWinner().map(this::getPlayerName);
     }
 
     public String getPlayerName(PlayerSide side) {
@@ -49,18 +41,18 @@ public class LiveMatch {
     }
 
     public int getSets(PlayerSide side) {
-        return side == PlayerSide.FIRST ? firstSet : secondSet;
+        return matchScore.getSets(side);
     }
 
     public int getGames(PlayerSide side) {
-        return liveSet.getGames(side);
+        return matchScore.getGames(side);
     }
 
-    public int getPoints(PlayerSide side) {
-        return liveSet.getPoints(side);
+    public GamePoint getGamePoint(PlayerSide side) {
+        return matchScore.getGamePoint(side);
     }
 
     public Integer getTieBreakPoints(PlayerSide side) {
-        return liveSet.getTieBreakPoints(side);
+        return matchScore.getTieBreakPoints(side);
     }
 }

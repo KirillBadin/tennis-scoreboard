@@ -72,7 +72,7 @@ public class LiveMatchService {
     private PlayerStateDto toPlayerState(LiveMatch match, PlayerSide side) {
         Integer tieBreakPoints = match.getTieBreakPoints(side);
         String points = (tieBreakPoints == null)
-                ? toDisplayPoints(match.getPoints(side), match.getPoints(side.opposite()))
+                ? match.getGamePoint(side).getDisplay()
                 : null;
         return new PlayerStateDto(
                 match.getPlayerName(side),
@@ -81,19 +81,5 @@ public class LiveMatchService {
                 match.getSets(side),
                 tieBreakPoints
         );
-    }
-
-    private String toDisplayPoints(int playerPoints, int opponentPoints) {
-        if (playerPoints >= 3 && opponentPoints >= 3){
-            if (playerPoints - opponentPoints == 1) return "AD";
-            else return "40";
-        }
-        return switch (playerPoints) {
-            case 0 -> "0";
-            case 1 -> "15";
-            case 2 -> "30";
-            case 3 -> "40";
-            default -> "";
-        };
     }
 }
