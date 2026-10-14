@@ -1,0 +1,12 @@
+target/
+.git/
+.gitignore
+.idea/
+*.iml
+*.log
+application-local.properties
+src/main/resources/application-local.properties
+README.md
+docker-compose.yml
+Dockerfile
+.dockerignore

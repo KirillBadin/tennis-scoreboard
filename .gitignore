@@ -35,3 +35,7 @@ build/
 .mvn/wrapper/maven-wrapper.jar
 
 *.log
+
+application-local.properties
+docker-compose.override.yml
+*.tar
