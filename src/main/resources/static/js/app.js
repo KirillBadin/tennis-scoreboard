@@ -156,7 +156,7 @@ function initMatchesPage() {
 
     function renderMatches(data) {
         var matches = data.matches;
-        var currentPage = data.currentPage;
+        var currentPage = data.currentPage + 1;
         totalPages = data.totalPages;
 
         $('#matches-body tr:not(#no-matches-row)').remove();

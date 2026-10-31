@@ -33,7 +33,7 @@ public class MatchService {
         ));
         return new MatchesPageDto(
                 dtoPage.getContent(),
-                dtoPage.getNumber()+1,  // Spring 0-based → фронт 1-based
+                dtoPage.getNumber(),
                 dtoPage.getTotalPages());
     }
     @Transactional
