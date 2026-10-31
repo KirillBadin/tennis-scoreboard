@@ -21,8 +21,8 @@ class SetScoreTest {
     }
 
     @Test
-    @DisplayName("initial state: 0-0, not finished, no tiebreak")
-    void initialState() {
+    @DisplayName("newSet: 0-0 по геймам, сет не завершён, тайбрейка нет")
+    void newSet_hasZeroGamesAndNoWinner() {
         assertEquals(0, set.getGames(PlayerSide.FIRST));
         assertEquals(0, set.getGames(PlayerSide.SECOND));
         assertFalse(set.isFinished());
@@ -32,56 +32,62 @@ class SetScoreTest {
     }
 
     @Nested
-    @DisplayName("game progression")
-    class GameProgression {
+    @DisplayName("addPoint: прогрессия геймов")
+    class AddPointGameProgression {
 
         @Test
-        @DisplayName("FIRST wins a game, score 1-0")
-        void firstWinsGame() {
+        @DisplayName("addPoint: FIRST выигрывает гейм → 1-0, сет не завершён")
+        void addPoint_whenFirstWinsGame_incrementsFirstGames() {
             winGameFor(PlayerSide.FIRST);
+
             assertEquals(1, set.getGames(PlayerSide.FIRST));
             assertEquals(0, set.getGames(PlayerSide.SECOND));
             assertFalse(set.isFinished());
         }
 
         @Test
-        @DisplayName("both sides win games, score 2-1")
-        void bothSidesWin() {
+        @DisplayName("addPoint: обе стороны берут геймы → 2-1")
+        void addPoint_whenBothSidesWin_gamesCountSeparately() {
             winGamesFor(PlayerSide.FIRST, 2);
             winGamesFor(PlayerSide.SECOND, 1);
+
             assertEquals(2, set.getGames(PlayerSide.FIRST));
             assertEquals(1, set.getGames(PlayerSide.SECOND));
         }
 
         @Test
-        @DisplayName("game points progress within a game")
-        void gamePointsProgress() {
+        @DisplayName("addPoint: очки внутри гейма растут FIFTEEN → THIRTY → FORTY")
+        void addPoint_pointsProgressToForty() {
             set.addPoint(PlayerSide.FIRST);
             assertEquals(GamePoint.FIFTEEN, set.getGamePoint(PlayerSide.FIRST));
+
             set.addPoint(PlayerSide.FIRST);
             assertEquals(GamePoint.THIRTY, set.getGamePoint(PlayerSide.FIRST));
+
             set.addPoint(PlayerSide.FIRST);
             assertEquals(GamePoint.FORTY, set.getGamePoint(PlayerSide.FIRST));
         }
     }
 
     @Nested
-    @DisplayName("set finishing")
-    class SetFinishing {
+    @DisplayName("getWinner: завершение сета")
+    class GetWinnerFinishing {
 
         @Test
-        @DisplayName("FIRST wins 6-0")
-        void firstWins6_0() {
+        @DisplayName("getWinner: FIRST выигрывает 6-0 → возвращает FIRST")
+        void getWinner_whenFirstWinsSixToZero_returnsFirst() {
             winGamesFor(PlayerSide.FIRST, GAMES_TO_WIN);
+
             assertTrue(set.isFinished());
             assertEquals(PlayerSide.FIRST, set.getWinner().orElse(null));
         }
 
         @Test
-        @DisplayName("SECOND wins 6-4")
-        void secondWins6_4() {
+        @DisplayName("getWinner: SECOND выигрывает 6-4 → возвращает SECOND")
+        void getWinner_whenSecondWinsSixToFour_returnsSecond() {
             winGamesFor(PlayerSide.FIRST, 4);
             winGamesFor(PlayerSide.SECOND, 6);
+
             assertTrue(set.isFinished());
             assertEquals(6, set.getGames(PlayerSide.SECOND));
             assertEquals(4, set.getGames(PlayerSide.FIRST));
@@ -89,30 +95,34 @@ class SetScoreTest {
         }
 
         @Test
-        @DisplayName("5-5 is not finished")
-        void notFinished5_5() {
+        @DisplayName("getWinner: при 5-5 → empty")
+        void getWinner_atFiveFive_returnsEmpty() {
             winGamesFor(PlayerSide.FIRST, 5);
             winGamesFor(PlayerSide.SECOND, 5);
+
             assertFalse(set.isFinished());
         }
 
         @Test
-        @DisplayName("6-5 is not finished (need 2-game lead)")
-        void notFinished6_5() {
+        @DisplayName("getWinner: при 6-5 → empty (нужен отрыв в 2 гейма)")
+        void getWinner_atSixFive_returnsEmpty() {
             winGamesFor(PlayerSide.FIRST, 5);
             winGamesFor(PlayerSide.SECOND, 5);
             winGameFor(PlayerSide.FIRST);
+
             assertEquals(6, set.getGames(PlayerSide.FIRST));
             assertEquals(5, set.getGames(PlayerSide.SECOND));
             assertFalse(set.isFinished());
         }
 
         @Test
-        @DisplayName("FIRST wins 7-5 after 5-5")
-        void firstWins7_5() {
+        @DisplayName("getWinner: после 5-5 FIRST берёт два гейма подряд → 7-5, возвращает FIRST")
+        void getWinner_afterFiveFiveAndTwoConsecutiveGames_returnsFirst() {
             winGamesFor(PlayerSide.FIRST, 5);
             winGamesFor(PlayerSide.SECOND, 5);
+
             winGamesFor(PlayerSide.FIRST, 2);
+
             assertTrue(set.isFinished());
             assertEquals(7, set.getGames(PlayerSide.FIRST));
             assertEquals(5, set.getGames(PlayerSide.SECOND));
@@ -121,8 +131,8 @@ class SetScoreTest {
     }
 
     @Nested
-    @DisplayName("tiebreak scenarios")
-    class TiebreakScenarios {
+    @DisplayName("addPoint: сценарии тайбрейка")
+    class AddPointTieBreakScenarios {
 
         @BeforeEach
         void reachTiebreak() {
@@ -133,8 +143,8 @@ class SetScoreTest {
         }
 
         @Test
-        @DisplayName("6-6 activates tiebreak, set not finished")
-        void tiebreakActive() {
+        @DisplayName("atSixSix: тайбрейк активен, сет не завершён, очки 0-0")
+        void atSixSix_tiebreakIsActive() {
             assertFalse(set.isFinished());
             assertTrue(set.getWinner().isEmpty());
             assertNotNull(set.getTieBreakPoints(PlayerSide.FIRST));
@@ -143,17 +153,19 @@ class SetScoreTest {
         }
 
         @Test
-        @DisplayName("during tiebreak winner is empty")
-        void winnerEmptyDuringTiebreak() {
+        @DisplayName("getWinner: во время тайбрейка → empty")
+        void getWinner_duringTieBreak_returnsEmpty() {
             score(PlayerSide.FIRST, 3);
             score(PlayerSide.SECOND, 2);
+
             assertTrue(set.getWinner().isEmpty());
         }
 
         @Test
-        @DisplayName("FIRST wins set 7-6 via tiebreak 7-0")
-        void firstWins7_6() {
+        @DisplayName("getWinner: FIRST выигрывает тайбрейк 7-0 → сет 7-6, возвращает FIRST")
+        void getWinner_whenFirstWinsTieBreakSevenToZero_returnsFirst() {
             score(PlayerSide.FIRST, 7);
+
             assertTrue(set.isFinished());
             assertEquals(7, set.getGames(PlayerSide.FIRST));
             assertEquals(6, set.getGames(PlayerSide.SECOND));
@@ -161,11 +173,13 @@ class SetScoreTest {
         }
 
         @Test
-        @DisplayName("SECOND wins extended tiebreak 8-6")
-        void secondWinsExtended() {
+        @DisplayName("getWinner: SECOND выигрывает extended-тайбрейк 8-6 → сет 7-6, возвращает SECOND")
+        void getWinner_whenSecondWinsExtendedTieBreakEightToSix_returnsSecond() {
             score(PlayerSide.FIRST, 6);
             score(PlayerSide.SECOND, 6);
+
             score(PlayerSide.SECOND, 2);
+
             assertTrue(set.isFinished());
             assertEquals(7, set.getGames(PlayerSide.SECOND));
             assertEquals(6, set.getGames(PlayerSide.FIRST));
@@ -173,33 +187,36 @@ class SetScoreTest {
         }
 
         @Test
-        @DisplayName("tiebreak points are null after set finished")
-        void tieBreakPointsNullAfterFinish() {
+        @DisplayName("getTieBreakPoints: после завершения сета → null")
+        void getTieBreakPoints_afterSetFinished_returnsNull() {
             score(PlayerSide.FIRST, 7);
+
             assertNull(set.getTieBreakPoints(PlayerSide.FIRST));
             assertNull(set.getTieBreakPoints(PlayerSide.SECOND));
         }
     }
 
     @Nested
-    @DisplayName("exception handling")
-    class ExceptionHandling {
+    @DisplayName("addPoint: исключения")
+    class AddPointExceptions {
 
         @Test
-        @DisplayName("addPoint after set finished throws")
-        void throwsAfterFinish() {
+        @DisplayName("addPoint: после завершения сета → IllegalStateException")
+        void addPoint_afterSetFinished_throwsIllegalState() {
             winGamesFor(PlayerSide.FIRST, GAMES_TO_WIN);
+
             assertThrows(IllegalStateException.class, () -> set.addPoint(PlayerSide.FIRST));
         }
 
         @Test
-        @DisplayName("addPoint after tiebreak finish throws")
-        void throwsAfterTiebreakFinish() {
+        @DisplayName("addPoint: после завершения тайбрейка → IllegalStateException")
+        void addPoint_afterTieBreakFinish_throwsIllegalState() {
             for (int i = 0; i < TIEBREAK_START_GAMES; i++) {
                 winGameFor(PlayerSide.FIRST);
                 winGameFor(PlayerSide.SECOND);
             }
             score(PlayerSide.FIRST, 7);
+
             assertThrows(IllegalStateException.class, () -> set.addPoint(PlayerSide.FIRST));
         }
     }

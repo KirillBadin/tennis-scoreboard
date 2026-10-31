@@ -17,16 +17,16 @@ class TieBreakScoreTest {
     }
 
     @Test
-    @DisplayName("initial state: 0-0, not finished")
-    void initialState() {
+    @DisplayName("newTieBreak: 0-0, победителя нет")
+    void newTieBreak_hasZeroPointsAndNoWinner() {
         assertEquals(0, tieBreak.getPoints(PlayerSide.FIRST));
         assertEquals(0, tieBreak.getPoints(PlayerSide.SECOND));
-        assertFalse(tieBreak.getWinner().isPresent());
+        assertTrue(tieBreak.getWinner().isEmpty());
     }
 
     @Test
-    @DisplayName("points increment independently")
-    void pointsIncrement() {
+    @DisplayName("addPoint: обе стороны набирают очки независимо")
+    void addPoint_whenBothSidesScore_pointsAreIndependent() {
         tieBreak.addPoint(PlayerSide.FIRST);
         assertEquals(1, tieBreak.getPoints(PlayerSide.FIRST));
         assertEquals(0, tieBreak.getPoints(PlayerSide.SECOND));
@@ -37,84 +37,94 @@ class TieBreakScoreTest {
     }
 
     @Nested
-    @DisplayName("winning (min 7, diff 2)")
-    class Winning {
+    @DisplayName("getWinner: победа (мин 7 , отрыв 2)")
+    class GetWinnerWinning {
 
         @Test
-        @DisplayName("FIRST wins 7-0")
-        void firstWins7_0() {
+        @DisplayName("getWinner: FIRST выигрывает 7-0 → возвращает FIRST")
+        void getWinner_whenFirstWinsSevenToZero_returnsFirst() {
             score(PlayerSide.FIRST, 7);
+
             assertEquals(PlayerSide.FIRST, tieBreak.getWinner().orElse(null));
         }
 
         @Test
-        @DisplayName("SECOND wins 7-5")
-        void secondWins7_5() {
+        @DisplayName("getWinner: SECOND выигрывает 7-5 → возвращает SECOND")
+        void getWinner_whenSecondWinsSevenToFive_returnsSecond() {
             score(PlayerSide.FIRST, 5);
             score(PlayerSide.SECOND, 7);
+
             assertEquals(PlayerSide.SECOND, tieBreak.getWinner().orElse(null));
         }
 
         @Test
-        @DisplayName("7-6 not enough")
-        void notFinishedAt7_6() {
+        @DisplayName("getWinner: при 7-6 → empty (нужен отрыв в 2 очка)")
+        void getWinner_atSevenSix_returnsEmpty() {
             score(PlayerSide.FIRST, 6);
             score(PlayerSide.SECOND, 6);
             tieBreak.addPoint(PlayerSide.FIRST);
-            assertFalse(tieBreak.getWinner().isPresent());
+
+            assertTrue(tieBreak.getWinner().isEmpty());
         }
 
         @Test
-        @DisplayName("FIRST wins 8-6")
-        void firstWins8_6() {
+        @DisplayName("getWinner: FIRST выигрывает extended-тайбрейк 8-6 → возвращает FIRST")
+        void getWinner_whenFirstWinsExtendedEightToSix_returnsFirst() {
             score(PlayerSide.FIRST, 6);
             score(PlayerSide.SECOND, 6);
             tieBreak.addPoint(PlayerSide.FIRST);
             tieBreak.addPoint(PlayerSide.FIRST);
+
             assertEquals(PlayerSide.FIRST, tieBreak.getWinner().orElse(null));
         }
 
         @Test
-        @DisplayName("SECOND wins 9-7")
-        void secondWins9_7() {
+        @DisplayName("getWinner: SECOND выигрывает extended-тайбрейк 9-7 → возвращает SECOND")
+        void getWinner_whenSecondWinsExtendedNineToSeven_returnsSecond() {
             score(PlayerSide.FIRST, 6);
             score(PlayerSide.SECOND, 6);
+
             tieBreak.addPoint(PlayerSide.FIRST);
             tieBreak.addPoint(PlayerSide.SECOND);
             tieBreak.addPoint(PlayerSide.SECOND);
             tieBreak.addPoint(PlayerSide.SECOND);
+
             assertEquals(PlayerSide.SECOND, tieBreak.getWinner().orElse(null));
         }
 
         @Test
-        @DisplayName("8-7 not enough")
-        void notFinishedAt8_7() {
+        @DisplayName("getWinner: при 8-7 → empty (нужен отрыв в 2 очка)")
+        void getWinner_atEightSeven_returnsEmpty() {
             score(PlayerSide.FIRST, 6);
             score(PlayerSide.SECOND, 6);
+
             tieBreak.addPoint(PlayerSide.FIRST);
             tieBreak.addPoint(PlayerSide.SECOND);
             tieBreak.addPoint(PlayerSide.FIRST);
-            assertFalse(tieBreak.getWinner().isPresent());
+
+            assertTrue(tieBreak.getWinner().isEmpty());
         }
     }
 
     @Nested
-    @DisplayName("exception handling")
-    class ExceptionHandling {
+    @DisplayName("addPoint: исключения")
+    class AddPointExceptions {
 
         @Test
-        @DisplayName("addPoint after finish throws")
-        void throwsAfterFinish() {
+        @DisplayName("addPoint: после завершения тайбрейка → IllegalStateException")
+        void addPoint_afterTieBreakFinished_throwsIllegalState() {
             score(PlayerSide.FIRST, 7);
+
             assertThrows(IllegalStateException.class, () -> tieBreak.addPoint(PlayerSide.FIRST));
         }
 
         @Test
-        @DisplayName("addPoint after extended finish throws")
-        void throwsAfterExtended() {
+        @DisplayName("addPoint: после завершения extended-тайбрейка → IllegalStateException")
+        void addPoint_afterExtendedFinish_throwsIllegalState() {
             score(PlayerSide.FIRST, 6);
             score(PlayerSide.SECOND, 6);
             score(PlayerSide.FIRST, 2);
+
             assertThrows(IllegalStateException.class, () -> tieBreak.addPoint(PlayerSide.SECOND));
         }
     }

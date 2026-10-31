@@ -17,86 +17,102 @@ class GameScoreTest {
     }
 
     @Test
-    @DisplayName("initial state: LOVE-LOVE, not finished")
-    void initialState() {
+    @DisplayName("getScoreFor: при новой игре → LOVE обоим")
+    void getScoreFor_withNewGame_returnsLoveForBoth() {
         assertEquals(GamePoint.LOVE, game.getScoreFor(PlayerSide.FIRST));
         assertEquals(GamePoint.LOVE, game.getScoreFor(PlayerSide.SECOND));
-        assertFalse(game.getWinner().isPresent());
+    }
+
+    @Test
+    @DisplayName("getWinner: при новой игре → empty")
+    void getWinner_withNewGame_returnsEmpty() {
+        assertTrue(game.getWinner().isEmpty());
     }
 
     @Nested
-    @DisplayName("point progression")
-    class PointProgression {
+    @DisplayName("addPoint: прогрессия очков")
+    class AddPointProgression {
 
         @Test
-        @DisplayName("LOVE → FIFTEEN")
-        void loveToFifteen() {
+        @DisplayName("addPoint: с LOVE одно очко FIRST → возвращает FIFTEEN")
+        void addPoint_withLoveScore_incrementsToFifteen() {
             game.addPoint(PlayerSide.FIRST);
+
             assertEquals(GamePoint.FIFTEEN, game.getScoreFor(PlayerSide.FIRST));
             assertEquals(GamePoint.LOVE, game.getScoreFor(PlayerSide.SECOND));
         }
 
         @Test
-        @DisplayName("FIFTEEN → THIRTY")
-        void fifteenToThirty() {
+        @DisplayName("addPoint: с FIFTEEN одно очко FIRST → возвращает THIRTY")
+        void addPoint_withFifteenScore_incrementsToThirty() {
             game.addPoint(PlayerSide.FIRST);
             game.addPoint(PlayerSide.FIRST);
+
             assertEquals(GamePoint.THIRTY, game.getScoreFor(PlayerSide.FIRST));
         }
 
         @Test
-        @DisplayName("THIRTY → FORTY")
-        void thirtyToForty() {
+        @DisplayName("addPoint: с THIRTY одно очко FIRST → возвращает FORTY")
+        void addPoint_withThirtyScore_incrementsToForty() {
             game.addPoint(PlayerSide.FIRST);
             game.addPoint(PlayerSide.FIRST);
             game.addPoint(PlayerSide.FIRST);
+
             assertEquals(GamePoint.FORTY, game.getScoreFor(PlayerSide.FIRST));
         }
 
         @Test
-        @DisplayName("both sides score independently")
-        void bothSidesScore() {
+        @DisplayName("addPoint: очки каждой стороны считаются независимо")
+        void addPoint_whenBothSidesScore_pointsAreIndependent() {
             game.addPoint(PlayerSide.FIRST);
             game.addPoint(PlayerSide.FIRST);
             game.addPoint(PlayerSide.SECOND);
+
             assertEquals(GamePoint.THIRTY, game.getScoreFor(PlayerSide.FIRST));
             assertEquals(GamePoint.FIFTEEN, game.getScoreFor(PlayerSide.SECOND));
         }
     }
 
     @Nested
-    @DisplayName("winning")
-    class Winning {
+    @DisplayName("getWinner: победа в гейме")
+    class GetWinnerWinning {
 
         @Test
-        @DisplayName("FIRST wins 40-0")
-        void firstWins40_0() {
-            score(PlayerSide.FIRST, 4);
+        @DisplayName("getWinner: 40-0 и очко FIRST → возвращает FIRST")
+        void getWinner_withFortyToZero_returnsFirst() {
+            score(PlayerSide.FIRST, 3);
+
+            game.addPoint(PlayerSide.FIRST);
+
             assertEquals(PlayerSide.FIRST, game.getWinner().orElse(null));
         }
 
         @Test
-        @DisplayName("FIRST wins from 40-30")
-        void firstWins40_30() {
+        @DisplayName("getWinner: 40-30 и очко FIRST → возвращает FIRST")
+        void getWinner_withFortyThirty_returnsFirst() {
             score(PlayerSide.FIRST, 3);
             score(PlayerSide.SECOND, 2);
+
             game.addPoint(PlayerSide.FIRST);
+
             assertEquals(PlayerSide.FIRST, game.getWinner().orElse(null));
         }
 
         @Test
-        @DisplayName("SECOND wins from 15-40")
-        void secondWins15_40() {
+        @DisplayName("getWinner: 15-40 и очко SECOND → возвращает SECOND")
+        void getWinner_withFifteenForty_returnsSecond() {
             score(PlayerSide.FIRST, 1);
             score(PlayerSide.SECOND, 3);
+
             game.addPoint(PlayerSide.SECOND);
+
             assertEquals(PlayerSide.SECOND, game.getWinner().orElse(null));
         }
     }
 
     @Nested
-    @DisplayName("deuce and advantage")
-    class DeuceAndAdvantage {
+    @DisplayName("addPoint: deuce и advantage")
+    class AddPointDeuceAndAdvantage {
 
         @BeforeEach
         void reachDeuce() {
@@ -105,88 +121,98 @@ class GameScoreTest {
         }
 
         @Test
-        @DisplayName("40-40 is not finished")
-        void deuceNotFinished() {
+        @DisplayName("getWinner: при 40-40 → empty")
+        void getWinner_atDeuce_returnsEmpty() {
             assertEquals(GamePoint.FORTY, game.getScoreFor(PlayerSide.FIRST));
             assertEquals(GamePoint.FORTY, game.getScoreFor(PlayerSide.SECOND));
-            assertFalse(game.getWinner().isPresent());
+
+            assertTrue(game.getWinner().isEmpty());
         }
 
         @Test
-        @DisplayName("FIRST gets ADVANTAGE from deuce")
-        void firstGetsAdvantage() {
+        @DisplayName("addPoint: при deuce очко FIRST → FIRST advantage")
+        void addPoint_atDeuce_givesAdvantageToFirst() {
             game.addPoint(PlayerSide.FIRST);
+
             assertEquals(GamePoint.ADVANTAGE, game.getScoreFor(PlayerSide.FIRST));
             assertEquals(GamePoint.FORTY, game.getScoreFor(PlayerSide.SECOND));
-            assertFalse(game.getWinner().isPresent());
+            assertTrue(game.getWinner().isEmpty());
         }
 
         @Test
-        @DisplayName("SECOND gets ADVANTAGE from deuce")
-        void secondGetsAdvantage() {
+        @DisplayName("addPoint: при deuce очко SECOND → SECOND advantage")
+        void addPoint_atDeuce_givesAdvantageToSecond() {
             game.addPoint(PlayerSide.SECOND);
+
             assertEquals(GamePoint.FORTY, game.getScoreFor(PlayerSide.FIRST));
             assertEquals(GamePoint.ADVANTAGE, game.getScoreFor(PlayerSide.SECOND));
-            assertFalse(game.getWinner().isPresent());
+            assertTrue(game.getWinner().isEmpty());
         }
 
         @Test
-        @DisplayName("from ADVANTAGE opponent scores → back to deuce")
-        void backToDeuce() {
+        @DisplayName("addPoint: при advantage у FIRST, очко SECOND → снова deuce")
+        void addPoint_withOpponentAdvantage_returnsToDeuce() {
             game.addPoint(PlayerSide.FIRST);
             game.addPoint(PlayerSide.SECOND);
+
             assertEquals(GamePoint.FORTY, game.getScoreFor(PlayerSide.FIRST));
             assertEquals(GamePoint.FORTY, game.getScoreFor(PlayerSide.SECOND));
-            assertFalse(game.getWinner().isPresent());
+            assertTrue(game.getWinner().isEmpty());
         }
 
         @Test
-        @DisplayName("FIRST wins from ADVANTAGE")
-        void firstWinsFromAdvantage() {
+        @DisplayName("getWinner: при advantage у FIRST, очко FIRST → возвращает FIRST")
+        void getWinner_withFirstAdvantage_returnsFirst() {
             game.addPoint(PlayerSide.FIRST);
             game.addPoint(PlayerSide.FIRST);
+
             assertEquals(PlayerSide.FIRST, game.getWinner().orElse(null));
         }
 
         @Test
-        @DisplayName("SECOND wins from ADVANTAGE")
-        void secondWinsFromAdvantage() {
+        @DisplayName("getWinner: при advantage у SECOND, очко SECOND → возвращает SECOND")
+        void getWinner_withSecondAdvantage_returnsSecond() {
             game.addPoint(PlayerSide.SECOND);
             game.addPoint(PlayerSide.SECOND);
+
             assertEquals(PlayerSide.SECOND, game.getWinner().orElse(null));
         }
 
         @Test
-        @DisplayName("multiple deuce cycles")
-        void multipleDeuceCycles() {
+        @DisplayName("addPoint: после нескольких deuce-циклов гейм не завершён")
+        void addPoint_withMultipleDeuceCycles_gameStillUnfinished() {
             game.addPoint(PlayerSide.FIRST);
             game.addPoint(PlayerSide.SECOND);
             game.addPoint(PlayerSide.FIRST);
             game.addPoint(PlayerSide.SECOND);
+
             assertEquals(GamePoint.FORTY, game.getScoreFor(PlayerSide.FIRST));
             assertEquals(GamePoint.FORTY, game.getScoreFor(PlayerSide.SECOND));
-            assertFalse(game.getWinner().isPresent());
+            assertTrue(game.getWinner().isEmpty());
         }
     }
 
     @Nested
-    @DisplayName("exception handling")
-    class ExceptionHandling {
+    @DisplayName("addPoint: исключения")
+    class AddPointExceptions {
 
         @Test
-        @DisplayName("addPoint after game finished throws")
-        void throwsAfterFinished() {
+        @DisplayName("addPoint: после победы FIRST добавление очков → IllegalStateException")
+        void addPoint_afterGameFinished_throwsIllegalState() {
             score(PlayerSide.FIRST, 4);
+
             assertThrows(IllegalStateException.class, () -> game.addPoint(PlayerSide.FIRST));
         }
 
         @Test
-        @DisplayName("addPoint after finished from advantage throws")
-        void throwsAfterAdvantage() {
+        @DisplayName("addPoint: после завершения гейма от advantage добавление очков → IllegalStateException")
+        void addPoint_afterAdvantageFinish_throwsIllegalState() {
             score(PlayerSide.FIRST, 3);
             score(PlayerSide.SECOND, 3);
+
             game.addPoint(PlayerSide.FIRST);
             game.addPoint(PlayerSide.FIRST);
+
             assertThrows(IllegalStateException.class, () -> game.addPoint(PlayerSide.SECOND));
         }
     }
