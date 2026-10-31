@@ -19,10 +19,9 @@ REST API + веб-интерфейс для ведения счёта тенни
 ## Быстрый запуск (bash)
 Через Docker
 ```bash
-git clone <URL_ВАШЕГО_РЕПОЗИТОРИЯ>
+git clone https://github.com/KirillBadin/tennis-scoreboard.git
 cd tennisscoreboard
 cp .env.example .env
 docker compose up -d --build
 ```
-Приложение: http://localhost:8080
-
+Приложение: http://localhost:8080/index.html
