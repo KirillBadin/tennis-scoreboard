@@ -36,6 +36,10 @@ public class LiveMatch {
         return matchScore.getWinner().map(this::getPlayerName);
     }
 
+    public Optional<PlayerSide> getWinnerSide() {
+        return matchScore.getWinner();
+    }
+
     public String getPlayerName(PlayerSide side) {
         return side == PlayerSide.FIRST ? firstPlayerName : secondPlayerName;
     }

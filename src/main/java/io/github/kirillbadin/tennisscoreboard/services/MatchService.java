@@ -40,8 +40,10 @@ public class MatchService {
     public void save(LiveMatch liveMatch) {
         Player firstPlayer = playerService.getOrCreatePlayer(liveMatch.getPlayerName(PlayerSide.FIRST));
         Player secondPlayer = playerService.getOrCreatePlayer(liveMatch.getPlayerName(PlayerSide.SECOND));
-        String winnerName = liveMatch.getWinnerName().orElseThrow();
-        Player winner = winnerName.equals(firstPlayer.getName()) ? firstPlayer : secondPlayer;
+        PlayerSide winnerSide = liveMatch.getWinnerSide().orElseThrow(() -> new IllegalStateException(
+                "Нельзя сохранить незавершённый матч: победитель не определён, uuid="
+                        + liveMatch.getUuid()));
+        Player winner = (winnerSide == PlayerSide.FIRST) ? firstPlayer : secondPlayer;
         matchRepository.save(new Match(firstPlayer, secondPlayer, winner));
     }
 }

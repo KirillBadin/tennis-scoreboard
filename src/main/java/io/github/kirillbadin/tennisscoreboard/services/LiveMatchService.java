@@ -46,20 +46,21 @@ public class LiveMatchService {
         synchronized (liveMatch) {
             liveMatch.addPoint(pointRequestDto.name());
             handleMatchCompletion(liveMatch);
+            return toMatchStateDto(liveMatch);
         }
-        return toMatchStateDto(liveMatch);
     }
 
-    public LiveMatch getMatch(UUID uuid){
+    private LiveMatch getMatch(UUID uuid){
         return liveMatchStorage.getMatch(uuid)
-                .orElseThrow(() -> new MatchNotFoundException("матч с таким uuid не найден"));
+                .orElseThrow(() -> new MatchNotFoundException("Матч с таким uuid не найден"));
     }
 
     private void handleMatchCompletion(LiveMatch liveMatch) {
-        liveMatch.getWinnerName().ifPresent(winnerName -> {
-           matchService.save(liveMatch);
-           liveMatchStorage.remove(liveMatch.getUuid());
-        });
+        if (liveMatch.getWinnerSide().isEmpty()) {
+            return;
+        }
+        matchService.save(liveMatch);
+        liveMatchStorage.remove(liveMatch.getUuid());
     }
 
     private MatchStateDto toMatchStateDto(LiveMatch liveMatch) {
@@ -71,12 +72,10 @@ public class LiveMatchService {
 
     private PlayerStateDto toPlayerState(LiveMatch match, PlayerSide side) {
         Integer tieBreakPoints = match.getTieBreakPoints(side);
-        String points = (tieBreakPoints == null)
-                ? match.getGamePoint(side).getDisplay()
-                : null;
+        boolean inTieBreak = tieBreakPoints != null;
         return new PlayerStateDto(
                 match.getPlayerName(side),
-                points,
+                inTieBreak ? null : match.getGamePoint(side).getDisplay(),
                 match.getGames(side),
                 match.getSets(side),
                 tieBreakPoints
