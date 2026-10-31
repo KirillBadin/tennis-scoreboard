@@ -28,24 +28,23 @@ public class MatchController {
     public ResponseEntity<MatchesPageDto> getMatches(
             @PageableDefault(size = DEFAULT_PAGE_SIZE, sort = "id") Pageable pageable,
             @RequestParam(name = "player_name", required = false) String playerName){
-
-        MatchesPageDto matchesPageDto = matchService.getMatchesPage(pageable, playerName);
-        return ResponseEntity.ok(matchesPageDto);
+        return ResponseEntity.ok(matchService.getMatchesPage(pageable, playerName));
     }
+
     @PostMapping
     public ResponseEntity<CreateMatchResponseDto> createMatch(@Valid @RequestBody CreateMatchRequestDto dto){
         return ResponseEntity.status(HttpStatus.CREATED).body(liveMatchService.createNewMatch(dto));
     }
 
     @PostMapping("/{uuid}/point")
-    public ResponseEntity<MatchStateDto> addPoint(@PathVariable UUID uuid, @Valid @RequestBody PointRequestDto pointRequestDto){
+    public ResponseEntity<MatchStateDto> addPoint(@PathVariable UUID uuid,
+                                                  @Valid @RequestBody PointRequestDto pointRequestDto){
         MatchStateDto matchStateDto = liveMatchService.addPoint(uuid, pointRequestDto);
         return ResponseEntity.ok(matchStateDto);
     }
 
     @GetMapping("/{uuid}")
     public ResponseEntity<MatchStateDto> getScore(@PathVariable UUID uuid){
-        MatchStateDto matchStateDto = liveMatchService.getScore(uuid);
-        return ResponseEntity.ok(matchStateDto);
+        return ResponseEntity.ok(liveMatchService.getScore(uuid));
     }
 }
